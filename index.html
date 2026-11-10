@@ -1518,7 +1518,11 @@ html,body{overscroll-behavior-y:contain}
    ========================================================= */
 const KEY = 'wms-sja2-proto-v1';
 /* Versi online (trial Supabase): aktif kalau config.js mengisi WMS_CONFIG.supabaseUrl. Tanpa itu = prototipe (data di browser). */
-const ONLINE = typeof window !== 'undefined' && !!(window.WMS_CONFIG && window.WMS_CONFIG.supabaseUrl);
+/* revisi 10 Nov: versi online hanya aktif kalau skrip online (onlineBoot dst.) ikut dimuat. Kalau config.js ada tapi skrip online tidak,
+   halaman tetap jalan sebagai prototipe dan memberi peringatan (sebelumnya layar kosong karena onlineBoot tidak ditemukan). */
+const ONLINE_CFG = typeof window !== 'undefined' && !!(window.WMS_CONFIG && window.WMS_CONFIG.supabaseUrl);
+const ONLINE = ONLINE_CFG && typeof onlineBoot === 'function';
+const ONLINE_HILANG = ONLINE_CFG && !ONLINE;
 /* revisi 16 Okt: semua gudang GBB tampil di versi online, sama seperti prototype */
 let SPL_KAR = [], SPL_DONE = null;
 const VERSION = 7;
@@ -7955,7 +7959,9 @@ applyTheme(getTheme());
 applyUi(getUi());
 window.addEventListener('scroll', () => { const tb = document.querySelector('.tb'); if (tb) tb.classList.toggle('scrolled', window.scrollY > 4); }, { passive:true });
 document.addEventListener('scroll', e => { const t = e.target; if (t && t.classList && t.classList.contains('dn-scroll')) DN_X = t.scrollLeft; }, { passive:true, capture:true });
-if (ONLINE) onlineBoot(); else { akunLoad(); load(); render(); }
+if (ONLINE) onlineBoot(); else { akunLoad(); load(); render();
+  if (ONLINE_HILANG) { console.error('config.js terisi, tetapi skrip online (onlineBoot dst.) tidak dimuat.'); const w = document.createElement('div'); w.className = 'savewarn'; w.setAttribute('role', 'alert');
+    w.innerHTML = '<b>Versi online belum aktif.</b> Skrip penghubung server tidak ditemukan, jadi halaman ini berjalan sebagai prototipe: data hanya tersimpan di perangkat ini. Hubungi admin sistem.'; document.body.appendChild(w); } }
 (async () => {
   try {
     if (window.claude && typeof window.claude.use === 'function') {
